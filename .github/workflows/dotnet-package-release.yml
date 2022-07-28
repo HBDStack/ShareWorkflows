@@ -1,12 +1,18 @@
 name: .NET
 
-on: wo
-
-env:
-  Project_Path: 'HBDStack.Framework.sln'
-  Enable_Release: ${{ github.ref == 'refs/heads/main' }}
-  Enable_Nuget_Release: ${{ github.ref  == 'refs/heads/main'}}
-
+on: 
+  workflow_call:
+    inputs:
+      Project_Path:
+        required: true
+        type: string
+      Enable_Release:
+        required: false
+        type: string
+      Enable_Nuget_Release:
+        required: false
+        type: string
+        
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,12 +32,12 @@ jobs:
           -n github -u baoduy2412 -p ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
 
       - name: Restore dependencies
-        run: dotnet restore ${{ env.Project_Path }}
+        run: dotnet restore ${{ inputs.Project_Path }}
       - name: Build
-        run: dotnet build ${{ env.Project_Path }} --no-restore --configuration Release
+        run: dotnet build ${{ inputs.Project_Path }} --no-restore --configuration Release
       - name: Test
-        if: ${{ env.Enable_Release != 'true' }}
-        run: dotnet test ${{ env.Project_Path }} --verbosity normal
+        if: ${{ inputs.Enable_Release != 'true' }}
+        run: dotnet test ${{ inputs.Project_Path }} --verbosity normal
 
       # Versioning
       - name: Get version and version code
@@ -53,20 +59,20 @@ jobs:
           echo "Version code: ${{ steps.versioning.outputs.versionCode }}"
           echo "New version: ${{ steps.bump-semver.outputs.new_version }}"
           echo "Is Main Branch: ${{ env.Is_Main_Branch }}"
-          echo "Is Enable_Release: ${{ env.Enable_Release }}"
-          echo "Is Enable_Nuget_Release: ${{ env.Enable_Nuget_Release }}"
+          echo "Is Enable_Release: ${{ inputs.Enable_Release }}"
+          echo "Is Enable_Nuget_Release: ${{ inputs.Enable_Nuget_Release }}"
 
       #- name: Environment Printer
       #  uses: managedkaos/print-env@v1.0
 
       # Ensure the project able to Package
       - name: Package
-        run: dotnet pack ${{ env.Project_Path }} --no-build --no-restore --configuration Release --output ${{ runner.WORKSPACE }}/nupkgs -p:PackageVersion=${{ steps.bump-semver.outputs.new_version }}
+        run: dotnet pack ${{ inputs.Project_Path }} --no-build --no-restore --configuration Release --output ${{ runner.WORKSPACE }}/nupkgs -p:PackageVersion=${{ steps.bump-semver.outputs.new_version }}
       - name: List Package
         run: ls ${{ runner.WORKSPACE }}/nupkgs
 
       - name: Zip Release
-        if: ${{ env.Enable_Release == 'true' }}
+        if: ${{ inputs.Enable_Release == 'true' }}
         uses: TheDoctor0/zip-release@0.6.2
         with:
           # Filename for archive
@@ -75,13 +81,13 @@ jobs:
 
       # Push nuget packages to Github Repository
       - name: Publish
-        if: ${{ env.Enable_Release == 'true' }}
+        if: ${{ inputs.Enable_Release == 'true' }}
         run: dotnet nuget push ${{ runner.WORKSPACE }}/nupkgs/*.nupkg --skip-duplicate --source github --api-key ${{ secrets.PACKAGE_TOKEN }}
 
       # Create Release
       - name: Create Release
         id: create_release
-        if: ${{ env.Enable_Release == 'true' }}
+        if: ${{ inputs.Enable_Release == 'true' }}
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
@@ -92,7 +98,7 @@ jobs:
           prerelease: false
       - name: Upload Release Asset
         id: upload-release-asset
-        if: ${{ env.Enable_Release == 'true' }}
+        if: ${{ inputs.Enable_Release == 'true' }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -104,5 +110,5 @@ jobs:
 
       # Publish to NUGET.ORG
       - name: Publish Nuget
-        if: ${{ env.Enable_Nuget_Release == 'true' }}
+        if: ${{ inputs.Enable_Nuget_Release == 'true' }}
         run: dotnet nuget push ${{ runner.WORKSPACE }}/nupkgs/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_PACKAGE_TOKEN }}
