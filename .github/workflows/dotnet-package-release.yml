@@ -86,6 +86,7 @@ jobs:
       # Push nuget packages to Github Repository
       - name: Publish
         if: ${{ inputs.Enable_Release == 'true' }}
+        continue-on-error: true
         run: dotnet nuget push ${{ runner.WORKSPACE }}/nupkgs/*.nupkg --skip-duplicate --source github --api-key ${{ secrets.PACKAGE_TOKEN }}
 
       # Create Release
@@ -115,4 +116,5 @@ jobs:
       # Publish to NUGET.ORG
       - name: Publish Nuget
         if: ${{ inputs.Enable_Nuget_Release == 'true' }}
+        continue-on-error: true
         run: dotnet nuget push ${{ runner.WORKSPACE }}/nupkgs/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_PACKAGE_TOKEN }}
