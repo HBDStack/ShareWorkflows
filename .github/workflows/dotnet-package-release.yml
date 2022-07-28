@@ -58,7 +58,6 @@ jobs:
           echo "Semver: ${{ steps.versioning.outputs.semver }}"
           echo "Version code: ${{ steps.versioning.outputs.versionCode }}"
           echo "New version: ${{ steps.bump-semver.outputs.new_version }}"
-          echo "Is Main Branch: ${{ env.Is_Main_Branch }}"
           echo "Is Enable_Release: ${{ inputs.Enable_Release }}"
           echo "Is Enable_Nuget_Release: ${{ inputs.Enable_Nuget_Release }}"
 
