@@ -49,5 +49,6 @@ jobs:
         shell: powershell
         run: |
           .\.sonar\scanner\dotnet-sonarscanner begin /k:"${{ inputs.Project_Name }}" /o:"hbdstack" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet build ${{ inputs.Project_Path }}
+          dotnet build ${{ inputs.Project_Path }} --configuration Debug
+          dotnet test ${{ inputs.Project_Path }} --collect "Code Coverage" --verbosity normal
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
