@@ -43,7 +43,7 @@ jobs:
       - name: Test
         continue-on-error: true
         if: ${{ inputs.Enable_Release != 'true' }}
-        run: dotnet test ${{ inputs.Project_Path }} --verbosity normal
+        run: dotnet test ${{ inputs.Project_Path }} --collect "Code Coverage" --verbosity normal
 
       # Versioning
       - name: Get version and version code
